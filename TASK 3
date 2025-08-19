@@ -1,0 +1,62 @@
+# Task 3: Advanced Password Generator
+import random
+import string
+
+def password_strength(pwd):
+    """Check password strength"""
+    length = len(pwd)
+    has_lower = any(c.islower() for c in pwd)
+    has_upper = any(c.isupper() for c in pwd)
+    has_digit = any(c.isdigit() for c in pwd)
+    has_symbol = any(c in string.punctuation for c in pwd)
+
+    score = sum([has_lower, has_upper, has_digit, has_symbol])
+
+    if length < 6 or score < 2:
+        return "Weak 🔴"
+    elif length < 10:
+        return "Medium 🟡"
+    else:
+        return "Strong 🟢"
+
+def generate_password(length, use_letters=True, use_digits=True, use_symbols=True):
+    """Generate a password with given options"""
+    char_pool = ""
+    if use_letters:
+        char_pool += string.ascii_letters
+    if use_digits:
+        char_pool += string.digits
+    if use_symbols:
+        char_pool += string.punctuation
+
+    if not char_pool:
+        raise ValueError("You must select at least one character type!")
+
+    # Ensure at least one of each chosen type
+    password = []
+    if use_letters:
+        password.append(random.choice(string.ascii_letters))
+    if use_digits:
+        password.append(random.choice(string.digits))
+    if use_symbols:
+        password.append(random.choice(string.punctuation))
+
+    # Fill remaining with random choices
+    while len(password) < length:
+        password.append(random.choice(char_pool))
+
+    random.shuffle(password)
+    return ''.join(password)
+
+# User input
+length = int(input("Enter password length: "))
+num_passwords = int(input("How many passwords to generate? "))
+
+use_letters = input("Include letters? (y/n): ").lower() == "y"
+use_digits = input("Include digits? (y/n): ").lower() == "y"
+use_symbols = input("Include symbols? (y/n): ").lower() == "y"
+
+print("\nGenerated Passwords:")
+for i in range(num_passwords):
+    pwd = generate_password(length, use_letters, use_digits, use_symbols)
+    print(f"{i+1}. {pwd}  → Strength: {password_strength(pwd)}")
