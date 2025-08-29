@@ -1,0 +1,159 @@
+import json
+
+# ---------------------------
+# File for storing tasks
+# ---------------------------
+TASK_FILE = "tasks.json"
+
+# ---------------------------
+# Load tasks from JSON file
+# ---------------------------
+def load_tasks():
+    try:
+        with open(TASK_FILE, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+# ---------------------------
+# Save tasks to JSON file
+# ---------------------------
+def save_tasks(tasks):
+    with open(TASK_FILE, "w") as f:
+        json.dump(tasks, f, indent=4)
+
+# ---------------------------
+# Show all tasks
+# ---------------------------
+def show_tasks(tasks):
+    if not tasks:
+        print("\nNo tasks available!\n")
+        return
+
+    print("\n--- TO-DO LIST ---")
+    for i, task in enumerate(tasks, start=1):
+        status = "✅ Done" if task["done"] else "❌ Pending"
+        print(f"{i}. {task['title']} | Priority: {task['priority']} | {status}")
+    print()
+
+# ---------------------------
+# Show tasks by status
+# ---------------------------
+def show_by_status(tasks, done=False):
+    filtered = [t for t in tasks if t["done"] == done]
+    if not filtered:
+        print("\nNo tasks found in this category!\n")
+        return
+    status_text = "Completed Tasks" if done else "Pending Tasks"
+    print(f"\n--- {status_text} ---")
+    for i, task in enumerate(filtered, start=1):
+        print(f"{i}. {task['title']} (Priority: {task['priority']})")
+    print()
+
+# ---------------------------
+# Add a new task
+# ---------------------------
+def add_task(tasks):
+    title = input("Enter task: ")
+    print("Select Priority: 1. Low  2. Medium  3. High")
+    choice = input("Choose priority (1/2/3): ")
+    priority_map = {"1": "Low", "2": "Medium", "3": "High"}
+    priority = priority_map.get(choice, "Medium")
+
+    tasks.append({"title": title, "done": False, "priority": priority})
+    save_tasks(tasks)
+    print("Task added successfully!")
+
+# ---------------------------
+# Edit a task
+# ---------------------------
+def edit_task(tasks):
+    show_tasks(tasks)
+    try:
+        num = int(input("Enter task number to edit: "))
+        if num < 1 or num > len(tasks):
+            print("Invalid task number!")
+            return
+        new_title = input("Enter new title: ")
+        print("Change Priority: 1. Low  2. Medium  3. High")
+        choice = input("Choose priority (1/2/3): ")
+        priority_map = {"1": "Low", "2": "Medium", "3": "High"}
+        new_priority = priority_map.get(choice, "Medium")
+
+        tasks[num - 1]["title"] = new_title
+        tasks[num - 1]["priority"] = new_priority
+        save_tasks(tasks)
+        print("Task updated successfully!")
+    except ValueError:
+        print("Please enter a valid number!")
+
+# ---------------------------
+# Mark task as done
+# ---------------------------
+def mark_done(tasks):
+    show_tasks(tasks)
+    try:
+        num = int(input("Enter task number to mark as done: "))
+        tasks[num - 1]["done"] = True
+        save_tasks(tasks)
+        print("Task marked as done!")
+    except:
+        print("Invalid task number!")
+
+# ---------------------------
+# Delete task
+# ---------------------------
+def delete_task(tasks):
+    show_tasks(tasks)
+    try:
+        num = int(input("Enter task number to delete: "))
+        tasks.pop(num - 1)
+        save_tasks(tasks)
+        print("Task deleted!")
+    except:
+        print("Invalid task number!")
+
+# ---------------------------
+# Main Program Loop
+# ---------------------------
+def main():
+    tasks = load_tasks()
+
+    while True:
+        print("\n=== TO-DO LIST MENU ===")
+        print("1. Add Task")
+        print("2. View All Tasks")
+        print("3. View Pending Tasks")
+        print("4. View Completed Tasks")
+        print("5. Mark Task as Done")
+        print("6. Edit Task")
+        print("7. Delete Task")
+        print("8. Exit")
+
+        choice = input("Choose an option: ")
+
+        if choice == "1":
+            add_task(tasks)
+        elif choice == "2":
+            show_tasks(tasks)
+        elif choice == "3":
+            show_by_status(tasks, done=False)
+        elif choice == "4":
+            show_by_status(tasks, done=True)
+        elif choice == "5":
+            mark_done(tasks)
+        elif choice == "6":
+            edit_task(tasks)
+        elif choice == "7":
+            delete_task(tasks)
+        elif choice == "8":
+            print("Goodbye! ✅")
+            break
+        else:
+            print("Invalid choice! Try again.")
+
+# ---------------------------
+# Run Program
+# ---------------------------
+if __name__ == "__main__":
+    main()
