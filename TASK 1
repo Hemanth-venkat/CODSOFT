@@ -11,7 +11,10 @@ TASK_FILE = "tasks.json"
 def load_tasks():
     if os.path.exists(TASK_FILE):
         with open(TASK_FILE, "r") as f:
-            return json.load(f)
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return []
     return []
 
 def save_tasks(tasks):
@@ -32,18 +35,20 @@ class ToDoApp:
 
         # Search Bar
         self.search_var = tk.StringVar()
-        tk.Entry(root, textvariable=self.search_var, width=25).pack(pady=5)
-        tk.Button(root, text="🔍 Search", command=self.search_task).pack()
+        search_frame = tk.Frame(root, bg="#f0f0f0")
+        search_frame.pack(pady=5)
+        tk.Entry(search_frame, textvariable=self.search_var, width=25).pack(side=tk.LEFT, padx=5)
+        tk.Button(search_frame, text="🔍 Search", command=self.search_task).pack(side=tk.LEFT)
 
         # Task Listbox
         self.listbox = tk.Listbox(root, width=40, height=15, selectmode=tk.SINGLE)
         self.listbox.pack(pady=10)
 
         # Buttons
-        tk.Button(root, text="➕ Add Task", command=self.add_task).pack(pady=5)
-        tk.Button(root, text="✅ Mark as Done", command=self.mark_done).pack(pady=5)
-        tk.Button(root, text="❌ Delete Task", command=self.delete_task).pack(pady=5)
-        tk.Button(root, text="🔄 Show All", command=self.show_tasks).pack(pady=5)
+        tk.Button(root, text="➕ Add Task", command=self.add_task, width=20).pack(pady=5)
+        tk.Button(root, text="✅ Mark as Done", command=self.mark_done, width=20).pack(pady=5)
+        tk.Button(root, text="❌ Delete Task", command=self.delete_task, width=20).pack(pady=5)
+        tk.Button(root, text="🔄 Show All", command=self.show_tasks, width=20).pack(pady=5)
 
         self.show_tasks()
 
@@ -52,9 +57,12 @@ class ToDoApp:
     # ---------------------------
     def show_tasks(self):
         self.listbox.delete(0, tk.END)
-        for task in self.tasks:
-            status = "✅" if task["done"] else "❌"
-            self.listbox.insert(tk.END, f"{task['title']} {status}")
+        if not self.tasks:
+            self.listbox.insert(tk.END, "No tasks available.")
+        else:
+            for task in self.tasks:
+                status = "✅" if task["done"] else "❌"
+                self.listbox.insert(tk.END, f"{task['title']} {status}")
 
     def add_task(self):
         title = simpledialog.askstring("Add Task", "Enter task name:")
@@ -64,30 +72,38 @@ class ToDoApp:
             self.show_tasks()
 
     def mark_done(self):
-        try:
-            index = self.listbox.curselection()[0]
-            self.tasks[index]["done"] = True
-            save_tasks(self.tasks)
-            self.show_tasks()
-        except IndexError:
+        selected = self.listbox.curselection()
+        if selected:
+            index = selected[0]
+            if "No tasks available." not in self.listbox.get(index):
+                self.tasks[index]["done"] = True
+                save_tasks(self.tasks)
+                self.show_tasks()
+        else:
             messagebox.showwarning("Warning", "Please select a task to mark as done!")
 
     def delete_task(self):
-        try:
-            index = self.listbox.curselection()[0]
-            self.tasks.pop(index)
-            save_tasks(self.tasks)
-            self.show_tasks()
-        except IndexError:
+        selected = self.listbox.curselection()
+        if selected:
+            index = selected[0]
+            if "No tasks available." not in self.listbox.get(index):
+                self.tasks.pop(index)
+                save_tasks(self.tasks)
+                self.show_tasks()
+        else:
             messagebox.showwarning("Warning", "Please select a task to delete!")
 
     def search_task(self):
-        query = self.search_var.get().lower()
+        query = self.search_var.get().lower().strip()
         self.listbox.delete(0, tk.END)
-        for task in self.tasks:
-            if query in task["title"].lower():
+        results = [task for task in self.tasks if query in task["title"].lower()]
+
+        if results:
+            for task in results:
                 status = "✅" if task["done"] else "❌"
                 self.listbox.insert(tk.END, f"{task['title']} {status}")
+        else:
+            self.listbox.insert(tk.END, "No matching tasks found.")
 
 # ---------------------------
 # Run Program
